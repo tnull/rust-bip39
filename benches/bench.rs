@@ -62,7 +62,7 @@ fn from_entropy(b: &mut Bencher) {
 #[bench]
 fn new_mnemonic(b: &mut Bencher) {
 	b.iter(|| {
-		let _ = Mnemonic::generate_in(LANG, 24);
+		let _ = Mnemonic::generate_in(LANG, WordCount::Words24);
 	});
 }
 
