@@ -596,11 +596,6 @@ impl Mnemonic {
 	/// The return value is a byte array and the size.
 	/// Use [Mnemonic::to_entropy] (needs `std`) to get a [`Vec<u8>`].
 	pub fn to_entropy_array(&self) -> ([u8; 33], usize) {
-		// We unwrap errors here because this method can only be called on
-		// values that were already previously validated.
-
-		let language = Mnemonic::language_of_iter(self.words()).unwrap();
-
 		// Preallocate enough space for the longest possible word list
 		let mut entropy = [0; 33];
 		let mut cursor = 0;
@@ -608,9 +603,7 @@ impl Mnemonic {
 		let mut remainder = 0;
 
 		let nb_words = self.word_count();
-		for word in self.words() {
-			let idx = language.find_word(word).expect("invalid mnemonic");
-
+		for idx in self.word_indices() {
 			remainder |= ((idx as u32) << (32 - 11)) >> offset;
 			offset += 11;
 
@@ -1050,6 +1043,28 @@ mod tests {
 
 		//greater than 256 bits
 		assert_eq!(Mnemonic::from_entropy(&vec![b'x'; 36]), Err(Error::BadEntropyBitCount(288)));
+	}
+
+	#[cfg(all(feature = "chinese-simplified", feature = "chinese-traditional"))]
+	#[test]
+	fn ambiguous_chinese_mnemonic_entropy_round_trip() {
+		let entropy = [0u8; 16];
+		let languages = [Language::SimplifiedChinese, Language::TraditionalChinese];
+
+		for language in languages.iter() {
+			let mnemonic = Mnemonic::from_entropy_in(*language, &entropy).unwrap();
+			let recovered = std::panic::catch_unwind(|| {
+				let (array, len) = mnemonic.to_entropy_array();
+				assert_eq!(&array[..len], &entropy[..]);
+				assert_eq!(mnemonic.to_entropy(), entropy);
+			});
+
+			assert!(
+				recovered.is_ok(),
+				"valid {:?} mnemonic must recover entropy without panicking",
+				language,
+			);
+		}
 	}
 
 	#[test]
