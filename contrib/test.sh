@@ -14,10 +14,11 @@ if cargo --version | grep "1\.41"; then
     rm Cargo.lock
 
     cargo update --package "bitcoin_hashes" --precise "0.12.0"
-    cargo update --package "rand" --precise "0.6.0"
+    cargo update --package "rand" --precise "0.7.0"
     cargo update --package "libc" --precise "0.2.151"
     cargo update --package "tinyvec" --precise "1.6.0"
     cargo update --package "unicode-normalization" --precise "0.1.22"
+    cargo update --package "ppv-lite86" --precise "0.2.17"
 fi
 
 echo "********* Testing std *************"
