@@ -263,7 +263,7 @@ impl Mnemonic {
 	/// ```
 	/// use bip39::{Mnemonic, Language};
 	///
-	/// let mut rng = bip39::rand::thread_rng();
+	/// let mut rng = bip39::rand::rngs::OsRng;
 	/// let m = Mnemonic::generate_in_with(&mut rng, Language::English, 24).unwrap();
 	/// ```
 	#[cfg(feature = "rand_core")]
@@ -297,7 +297,7 @@ impl Mnemonic {
 	/// ```
 	#[cfg(feature = "rand")]
 	pub fn generate_in(language: Language, word_count: usize) -> Result<Mnemonic, Error> {
-		Mnemonic::generate_in_with(&mut rand::thread_rng(), language, word_count)
+		Mnemonic::generate_in_with(&mut rand::rngs::OsRng, language, word_count)
 	}
 
 	/// Generate a new [Mnemonic] in English.
@@ -727,7 +727,7 @@ mod tests {
 	fn test_generate() {
 		let _ = Mnemonic::generate(24).unwrap();
 		let _ = Mnemonic::generate_in(Language::English, 24).unwrap();
-		let _ = Mnemonic::generate_in_with(&mut rand::thread_rng(), Language::English, 24).unwrap();
+		let _ = Mnemonic::generate_in_with(&mut rand::rngs::OsRng, Language::English, 24).unwrap();
 	}
 
 	#[cfg(feature = "rand")]

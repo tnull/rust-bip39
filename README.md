@@ -41,10 +41,11 @@ When using older version of Rust, you might have to pin the versions of several 
 
 ```bash
 cargo update --package "bitcoin_hashes" --precise "0.12.0"
-cargo update --package "rand" --precise "0.6.0"
+cargo update --package "rand" --precise "0.7.0"
 cargo update --package "libc" --precise "0.2.151"
 cargo update --package "tinyvec" --precise "1.6.0"
 cargo update --package "unicode-normalization" --precise "0.1.22"
+cargo update --package "ppv-lite86" --precise "0.2.17"
 ```
 
 If you enable the `zeroize` feature the MSRV becomes 1.51.
