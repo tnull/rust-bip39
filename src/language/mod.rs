@@ -151,7 +151,10 @@ impl Language {
 		}
 	}
 
-	/// Get words from the word list that start with the given prefix.
+	/// Get the first contiguous run of words that start with the given prefix.
+	///
+	/// This can omit matches in word lists that are not sorted by Rust string ordering.
+	#[deprecated(note = "use Language::words_by_prefix_iter for complete results")]
 	pub fn words_by_prefix(self, prefix: &str) -> &[&'static str] {
 		// The words in the word list are ordered lexicographically. This means
 		// that we cannot use `binary_search` to find words more efficiently,
@@ -164,6 +167,16 @@ impl Language {
 		};
 		let count = self.word_list()[first..].iter().take_while(|w| w.starts_with(prefix)).count();
 		&self.word_list()[first..first + count]
+	}
+
+	/// Iterate over every word that starts with the given prefix.
+	///
+	/// Results retain their order in the official BIP-39 word list.
+	pub fn words_by_prefix_iter<'a>(
+		self,
+		prefix: &'a str,
+	) -> impl Iterator<Item = &'static str> + Clone + 'a {
+		self.word_list().iter().copied().filter(move |word| word.starts_with(prefix))
 	}
 
 	/// Get the index of the word in the word list.
@@ -279,17 +292,45 @@ mod tests {
 	}
 
 	#[test]
-	fn words_by_prefix() {
+	fn words_by_prefix_iter() {
 		let lang = Language::English;
 
-		let res = lang.words_by_prefix("woo");
-		assert_eq!(res, ["wood", "wool"]);
+		let res: Vec<_> = lang.words_by_prefix_iter("woo").collect();
+		assert_eq!(res.as_slice(), &["wood", "wool"]);
 
-		let res = lang.words_by_prefix("");
+		let res: Vec<_> = lang.words_by_prefix_iter("").collect();
 		assert_eq!(res.len(), 2048);
 
-		let res = lang.words_by_prefix("woof");
+		let res: Vec<_> = lang.words_by_prefix_iter("woof").collect();
 		assert!(res.is_empty());
+	}
+
+	#[cfg(feature = "czech")]
+	#[test]
+	fn words_by_prefix_czech_finds_separated_matches() {
+		let words: Vec<_> = Language::Czech.words_by_prefix_iter("sva").collect();
+		assert_eq!(words.as_slice(), &["svah", "svalstvo", "svatba", "svazek"]);
+	}
+
+	#[cfg(feature = "french")]
+	#[test]
+	fn words_by_prefix_french_finds_separated_matches() {
+		let words: Vec<_> = Language::French.words_by_prefix_iter("bel").collect();
+		assert_eq!(words.as_slice(), &["belette", "belote"]);
+	}
+
+	#[cfg(feature = "japanese")]
+	#[test]
+	fn words_by_prefix_japanese_finds_separated_matches() {
+		let words: Vec<_> = Language::Japanese.words_by_prefix_iter("あつ").collect();
+		assert_eq!(words.as_slice(), &["あつい", "あつかう", "あつまり", "あつめる"]);
+	}
+
+	#[cfg(feature = "spanish")]
+	#[test]
+	fn words_by_prefix_spanish_finds_separated_matches() {
+		let words: Vec<_> = Language::Spanish.words_by_prefix_iter("agu").collect();
+		assert_eq!(words.as_slice(), &["agua", "agudo", "aguja"]);
 	}
 
 	#[cfg(all(
